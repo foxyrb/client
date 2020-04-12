@@ -1,5 +1,13 @@
+# frozen_string_literal: true
+
 require "bundler/setup"
 require "foxy/client"
+
+require_relative("./support/mock_http_bin")
+
+require "securerandom"
+EXECUTION = SecureRandom.uuid.split("-").first
+Thread.current[:request_id] = EXECUTION
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
@@ -8,7 +16,7 @@ RSpec.configure do |config|
   # Disable RSpec exposing methods globally on `Module` and `main`
   config.disable_monkey_patching!
 
-  config.expect_with :rspec do |c|
+  config.expect_with(:rspec) do |c|
     c.syntax = :expect
   end
 end

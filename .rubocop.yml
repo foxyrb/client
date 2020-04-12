@@ -1,0 +1,47 @@
+AllCops:
+  TargetRubyVersion: 2.6
+
+Documentation:
+  Enabled: false
+Style/AsciiComments:
+  Enabled: false
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
+LineLength:
+  Max: 100
+LambdaCall:
+  EnforcedStyle: braces
+
+Style/MethodCallWithArgsParentheses:
+  Enabled: true
+  IgnoreMacros: true
+  IgnoredMethods:
+    - "require"
+    - "require_relative"
+    - "source"
+    - "task"
+    - "add_dependency"
+    - "add_development_dependency"
+    - "yield"
+    - "raise"
+    - "to"
+    - "not_to"
+    - "include"
+    - "is_a?"
+    - "eq"
+    - "eql"
+    - "be"
+    - "be_a"
+    - "raise_exception"
+    - "gem"
+  AllowParenthesesInMultilineCall: false
+  AllowParenthesesInChaining: false
+  AllowParenthesesInCamelCaseMethod: false
+  EnforcedStyle: require_parentheses
+  SupportedStyles:
+    - require_parentheses
+    - omit_parentheses
+Metrics/MethodLength:
+  Max: 20
+Style/FormatStringToken:
+  EnforcedStyle: template
