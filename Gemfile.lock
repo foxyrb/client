@@ -24,6 +24,7 @@ GEM
     method_source (1.0.0)
     multi_json (1.14.1)
     multipart-post (2.1.1)
+    oj (3.10.6)
     parallel (1.19.1)
     parser (2.7.1.0)
       ast (~> 2.4.0)
@@ -67,6 +68,7 @@ PLATFORMS
 
 DEPENDENCIES
   foxy-client!
+  oj
   pry
   rake (~> 12.0)
   rspec (~> 3.0)

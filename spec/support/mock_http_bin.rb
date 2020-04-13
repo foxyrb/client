@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "multi_json"
+require "oj"
 
 class MockHTTPBin
   attr_reader :env
