@@ -24,6 +24,65 @@ module Foxy
         end
       end
 
+      class MultipartRequestMiddleware
+        def initialize(app)
+          @app = app
+        end
+
+        def call(opts)
+          if opts[:multipart]
+            boundary = generate_boundary
+            body = dump(opts[:multipart], boundary)
+
+            opts[:headers]['Content-Type'] = "multipart/form-data; boundary=#{boundary}"
+            opts[:headers]['Content-Length'] = body.length.to_s
+            opts[:body] = body
+          end
+          @app.(opts)
+        end
+
+        def generate_boundary
+          "-----------RubyMultipartPost-#{SecureRandom.hex}"
+        end
+
+        def dump(params, boundary)
+          parts = process_params(params) do |key, value|
+            part(boundary, key, value)
+          end
+          parts << Faraday::Parts::EpiloguePart.new(boundary)
+
+          Faraday::CompositeReadIO.new(parts)
+        end
+
+        def process_params(params, prefix = nil, pieces = nil, &block)
+          params.inject(pieces || []) do |all, (key, value)|
+            key = "#{prefix}[#{key}]" if prefix
+
+            case value
+            when Array
+              values = value.inject([]) { |a, v| a << [nil, v] }
+              process_params(values, key, all, &block)
+            when Hash
+              process_params(value, key, all, &block)
+            else
+              # rubocop:disable Performance/RedundantBlockCall
+              all << block.call(key, value)
+              # rubocop:enable Performance/RedundantBlockCall
+            end
+          end
+        end
+
+        def part(boundary, key, value)
+          if value.respond_to?(:to_part)
+            value.to_part(boundary, key)
+          else
+            Faraday::Parts::Part.new(boundary, key, value)
+          end
+        end
+      end
+
+
+
       class FormRequestMiddleware
         def initialize(app)
           @app = app
@@ -31,7 +90,7 @@ module Foxy
 
         def call(opts)
           if opts[:form]
-            opts[:headers][:content_type] = "application/x-www-form-urlencoded"
+            opts[:headers]['Content-Type'] = "application/x-www-form-urlencoded"
             opts[:body] = URI.encode_www_form(opts[:form])
           end
           @app.(opts)
@@ -45,7 +104,7 @@ module Foxy
 
         def call(opts)
           if opts[:json]
-            opts[:headers][:content_type] = "application/json"
+            opts[:headers]['Content-Type'] = "application/json"
             opts[:body] = MultiJson.dump(opts[:json])
           end
           @app.(opts)
@@ -98,6 +157,7 @@ module Foxy
         @preprocessors ||= Middleware::Builder.new do |b|
           b.use(JsonRequestMiddleware)
           b.use(FormRequestMiddleware)
+          b.use(MultipartRequestMiddleware)
           b.use(XRequestIdMiddleware)
         end
       end
