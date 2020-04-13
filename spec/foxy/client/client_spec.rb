@@ -394,11 +394,9 @@ RSpec.describe(Foxy::Client::Client) do
     end
   end
 
-
-
   describe "multipart" do
     subject do
-      Foxy::Client::Client.new(adapter: adapter, url: "http://localhost:5300", headers: { user_agent: "test-agent"})
+      Foxy::Client::Client.new(adapter: adapter, url: "http://localhost:5300", headers: { user_agent: "test-agent" })
     end
 
     let(:body) do
@@ -564,9 +562,9 @@ RSpec.describe(Foxy::Client::Client) do
       ].join("\r\n"))
     end
 
-    let(:expected_files) {
+    let(:expected_files) do
       { "file" => "\u0004\bI\"\ffällen\u0006:\u0006ET" }
-    }
+    end
 
     it do
       response = subject.request(method: :post, path: "/post", body: body)
@@ -583,7 +581,7 @@ RSpec.describe(Foxy::Client::Client) do
         "args" => {},
         "data" => match(expected_data),
         "files" => expected_files,
-        "form" => { },
+        "form" => {},
         "headers" => match(expected_headers),
         "json" => nil,
         "origin" => "127.0.0.1",
