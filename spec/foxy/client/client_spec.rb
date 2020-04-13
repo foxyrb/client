@@ -14,6 +14,74 @@ RSpec.describe(Foxy::Client::Client) do
   subject { Foxy::Client::Client.new(adapter: adapter, url: "http://localhost:5300", headers: { user_agent: "test-agent" }) }
   # subject { Foxy::Client::Client.new(adapter: adapter, url: "https://httpbin.org", user_agent: "test-agent")
 
+  describe "#build_request" do
+    subject do
+      Foxy::Client::Client.new(url: "http://localhost:5300", headers: { user_agent: "test-agent" })
+    end
+
+    let(:hex32) do
+      "[0-9a-f]{32}"
+    end
+
+    let(:multipart) do
+      Regexp.new([
+        "-------------RubyMultipartPost-#{hex32}",
+        "Content-Disposition: form-data; name=\"key\"",
+        "",
+        "value",
+        "-------------RubyMultipartPost-#{hex32}",
+        "Content-Disposition: form-data; name=\"key2\"",
+        "",
+        "value2",
+        "-------------RubyMultipartPost-#{hex32}--",
+        ""
+      ].join("\r\n"))
+    end
+
+    it "json" do
+      request = subject.build_request(json: { key: "value", key2: "value2" })
+      expect(request).to eq(
+        body: "{\"key\":\"value\",\"key2\":\"value2\"}",
+        headers: { "Content-Type" => "application/json",
+                   "X-Request-Id" => EXECUTION,
+                   user_agent: "test-agent" },
+        json: { key: "value", key2: "value2" },
+        params: {},
+        url: "http://localhost:5300"
+      )
+    end
+
+    it "form" do
+      request = subject.build_request(form: { key: "value", key2: "value2" })
+      expect(request).to eq(
+        body: "key=value&key2=value2",
+        headers: { "Content-Type" => "application/x-www-form-urlencoded",
+                   "X-Request-Id" => EXECUTION,
+                   user_agent: "test-agent" },
+        form: { key: "value", key2: "value2" },
+        params: {},
+        url: "http://localhost:5300"
+      )
+    end
+
+    it "multipart" do
+      request = subject.build_request(multipart: { key: "value", key2: "value2" })
+
+      expect(request[:body].read).to match(multipart)
+
+      expect(request).to match(
+        body: Faraday::CompositeReadIO,
+        headers: { "Content-Type" => match(%r{^multipart/form-data; boundary=-----------RubyMultipartPost-#{hex32}$}),
+                   "Content-Length"=>"305",
+                   "X-Request-Id" => EXECUTION,
+                   user_agent: "test-agent" },
+        multipart: { key: "value", key2: "value2" },
+        params: {},
+        url: "http://localhost:5300"
+      )
+    end
+  end
+
   it "#request / json" do
     response = subject.request(path: "/get")
     json = JSON.parse(response.body)
