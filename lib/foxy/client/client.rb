@@ -43,7 +43,7 @@ module Foxy
       end
 
       def request(**params)
-        backend.(**build_request(**params))
+        session.(**build_request(**params))
       end
 
       def build_request(headers: {}, params: {}, **kwargs)
@@ -67,8 +67,8 @@ module Foxy
         @connection ||= Faraday.new
       end
 
-      def backend
-        @backend ||= lambda do |method: :get, url: "http:/", path:, body: nil, headers: nil, params: nil, **_|
+      def session
+        @session ||= lambda do |method: :get, url: "http:/", path:, body: nil, headers: nil, params: nil, **_|
           path = Faraday::Utils.URI(url).merge(path)
 
           connection.public_send(method, path) do |req|
